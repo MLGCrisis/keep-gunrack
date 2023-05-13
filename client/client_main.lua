@@ -140,8 +140,8 @@ local function open_stash(plate)
           TriggerEvent('animations:client:EmoteCommandStart', { "mechanic4" })
      end
      local settings = { maxweight = Config.gunrack.size, slots = Config.gunrack.slots }
-     TriggerServerEvent("inventory:server:OpenInventory", "stash", Config.gunrack.stash_prefix .. plate, settings)
-     TriggerEvent("inventory:client:SetCurrentStash", Config.gunrack.stash_prefix .. plate)
+     TriggerServerEvent("inventory:server:OpenInventory", "stash", "Gunrack_" .. plate, settings)
+     TriggerEvent("inventory:client:SetCurrentStash", "Gunrack_" .. plate)
 
      if Config.gunrack.while_open_animation then
           Wait(3500)
@@ -155,7 +155,11 @@ end
 -- events
 
 RegisterNetEvent('keep-gunrack:client:start_installing_gunrack', function()
-     installing_gunrack()
+     -- technically we won't need to check for item but just in case
+     QBCore.Functions.TriggerCallback("QBCore:HasItem", function(hasitem)
+          if not hasitem then return end
+          installing_gunrack()
+     end, 'policegunrack')
 end)
 
 RegisterNetEvent("keep-gunrack:client:open_gunrack", function(plate)

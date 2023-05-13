@@ -18,7 +18,7 @@ local function remove_item(src, Player, name, amount)
 end
 
 local function isAlreadyInstalled(plate)
-     local stash = Config.gunrack.stash_prefix .. plate
+     local stash = 'Gunrack_' .. plate
      local result = MySQL.Sync.fetchScalar("SELECT EXISTS(SELECT id FROM stashitems WHERE stash= ?)", { stash })
      if result == 1 then return true else return false end
 end
@@ -40,15 +40,6 @@ end
 
 -- callbacks
 
-local function HasItem(source, Player, item_name)
-     local item = Player.Functions.GetItemByName(item_name)
-     if item then
-          TriggerClientEvent('QBCore:Notify', source, "You don't have a Gun Rack?!", 'error')
-          return true
-     end
-     return false
-end
-
 QBCore.Functions.CreateUseableItem('policegunrack', function(source, item)
      local Player = QBCore.Functions.GetPlayer(source)
      if not Player then return end
@@ -56,14 +47,13 @@ QBCore.Functions.CreateUseableItem('policegunrack', function(source, item)
           TriggerClientEvent('QBCore:Notify', source, Lang:t('error.not_authorized'), "error")
           return
      end
-
      TriggerClientEvent('keep-gunrack:client:start_installing_gunrack', source)
 end)
 
 
 if Config.gunrack.use_keys_to_unlock_gunrack then
      QBCore.Functions.CreateUseableItem('gunrackkey', function(source, item)
-          TriggerClientEvent('keep-gunrack:menu:open_rack_by_key', source)
+
      end)
 
      local function IsPlayerWhitelisted(citizenid)
@@ -162,26 +152,6 @@ end
 
 -- events
 
-local function AddInitialItems(plate)
-     local query = 'INSERT INTO stashitems (stash, items) VALUES (:stash, :items)'
-     local items = {}
-
-     for key, item in pairs(Config.InitialItems) do
-          if QBCore.Shared.Items[item.name] then
-               local i = #items + 1
-               items[i] = QBCore.Shared.Items[item.name]
-               items[i]['amount'] = item.amount
-               items[i]['description'] = nil
-               items[i]['slot'] = i
-          end
-     end
-
-     MySQL.Sync.insert(query, {
-          ['stash'] = Config.gunrack.stash_prefix .. plate,
-          ['items'] = json.encode(items),
-     })
-end
-
 RegisterNetEvent('keep-gunrack:server:create_gunrack', function(plate)
      local src = source
      local Player = QBCore.Functions.GetPlayer(src)
@@ -196,16 +166,9 @@ RegisterNetEvent('keep-gunrack:server:create_gunrack', function(plate)
           return
      end
 
-     local _HasItem = HasItem(src, Player, 'policegunrack')
-     if not _HasItem then return end
-
      if not remove_item(src, Player, 'policegunrack', 1) then
           TriggerClientEvent('QBCore:Notify', src, Lang:t('error.failed_to_use_gunrack'), "error")
           return
-     end
-
-     if Config.gunrack.add_initial_items then
-          AddInitialItems(plate)
      end
 
      TriggerClientEvent('QBCore:Notify', src, Lang:t('success.successful_installation'), "success")
